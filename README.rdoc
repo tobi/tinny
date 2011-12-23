@@ -1,3 +1,10 @@
+= Installation
+
+  goinstall github.com/tobi/tinny
+
+you may have to add your $GOROOT/bin to your path to access the executable
+
+
 = Usage
 
  tobi@tobbook8 ~  $ tinny --help
