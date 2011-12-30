@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"os"
 	"fmt"
 	"bufio"
@@ -14,17 +13,9 @@ import (
 	"strconv"
 )
 
-var port *int = flag.Int("port", 3333, "port")
-var executable *string = flag.String("executable", "server", "executable to launch. Must support -pXXXX for port assignment")
-var compiler *string = flag.String("compiler", "make", "compiler to execute. make by default.")
-
-func error(client io.WriteCloser, s string) {
-	log.Printf("Error: %s", s)
-	client.Write([]byte("HTTP/1.0 500 Internal Error\n"))
-	client.Write([]byte("Content-Type: text/plain\n"))
-	client.Write([]byte("\n\n" + s + "\n"))
-	client.Close()
-}
+var port *int = flag.Int("p", 3333, "port")
+var executable *string = flag.String("e", "server", "executable to launch. Must support -pXXXX for port assignment")
+var compiler *string = flag.String("c", "gb", "compiler to execute. gb by default.")
 
 func pipeRequestResponse(server, client net.Conn) os.Error {
 
@@ -72,7 +63,7 @@ func forward(client net.Conn) {
 		return
 	}
 
-  client_port := *port+1024
+  client_port := *port + 1024
 
 	cmd = exec.Command(*executable, "-p", strconv.Itoa(client_port))
 	err = cmd.Start()
@@ -81,6 +72,8 @@ func forward(client net.Conn) {
 		error(client, err.String())
 		return
 	}
+
+  defer cmd.Process.Kill()
 
 	// 20 retries, ~= 10 secs of attempts
 	for i := 0; i < 50; i++ {
