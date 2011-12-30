@@ -9,9 +9,9 @@ you may have to add your $GOROOT/bin to your path to access the executable
 
  tobi@tobbook8 ~  $ tinny --help
  Usage of tinny:
-   -compiler="make": compiler to execute. make by default.
-   -executable="server": executable to launch. Must support -pXXXX for port assignment
-   -port=3333: port
+   -c="make": compiler to execute. make by default.
+   -e="server": executable to launch. Must support -pXXXX for port assignment
+   -p=3333: port
 
 = Purpose
 
@@ -28,4 +28,33 @@ You must be working on a http sever. The http server needs to understand the -pX
  Listening on port 3333
    -> forwarding to executable server -p4357
 
+= Template: 
 
+If you are starting a go web project, use this as template:
+
+  package main
+  
+  import (
+    "http"
+    "log"
+    "flag"
+    "fmt"
+  )
+  
+  var port *int = flag.Int("p", 3333, "http port") 
+  
+  func HelloServer(w http.ResponseWriter, req *http.Request) {
+    w.Header().Set("Content-Type", "text/plain")
+    w.Write([]byte("hello, world\n"))
+  }
+  
+  func main() {
+    flag.Parse()
+    http.HandleFunc("/", HelloServer)
+  
+    fmt.Printf("Listening on port %d", port)
+    err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
+    if err != nil {
+      log.Fatal("ListenAndServe: ", err.String())
+    }
+  }
