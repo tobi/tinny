@@ -53,8 +53,11 @@ func pipeRequestResponse(server, client net.Conn) os.Error {
 		return err
 	}
 
+  log.Printf("%s %s [%s]", req.Method, req.RawURL, resp.Status)
+
 	// forward it on
 	client.Write(rawResp)
+
 	return nil
 }
 
@@ -69,7 +72,9 @@ func forward(client net.Conn) {
 		return
 	}
 
-	cmd = exec.Command(*executable, "-p", strconv.Itoa(*port+1024))
+  client_port := *port+1024
+
+	cmd = exec.Command(*executable, "-p", strconv.Itoa(client_port))
 	err = cmd.Start()
 
 	if err != nil {
@@ -78,25 +83,21 @@ func forward(client net.Conn) {
 	}
 
 	// 20 retries, ~= 10 secs of attempts
-	for i := 0; i < 20; i++ {
-		server, err := net.Dial("tcp", "127.0.0.1:5050")
+	for i := 0; i < 50; i++ {
+		server, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", client_port))
 		if err == nil {
 
-			err = pipeRequestResponse(server, client)
-			if err != nil {
+			if pipeRequestResponse(server, client) != nil {
 				error(client, err.String())
-				return
 			}
-
-			log.Print("Forwarded...")
 
 			return
 		}
 
-		time.Sleep(5e8) // 500ms
+		time.Sleep(2e8) // 200ms
 	}
 
-	error(client, err.String())
+  error(client, fmt.Sprintf("Timeout waiting to connect to port %d. Perhaps the executable doesn't support the -p parameter?", client_port))
 }
 
 func main() {
@@ -105,16 +106,17 @@ func main() {
 	server, err := net.Listen("tcp", ":"+strconv.Itoa(*port))
 	if err != nil {
 		log.Fatal("Listen: ", err.String())
+    return
 	}
 
-	fmt.Printf("Listening on port %d\n", *port)
-	fmt.Printf(" -> forwarding to executable %s -p%d\n", *executable, *port+1024)
+	log.Printf("Listening on port %d\n", *port)
+	log.Printf(" -> forwarding to executable %s -p%d\n", *executable, *port+1024)
 
 	for {
 		conn, err := server.Accept()
 
 		if err != nil {
-			log.Fatal("accept:", err.String()) // TODO(r): exit?
+			log.Fatal("accept:", err.String()) 
 		}
 
 		go forward(conn)
