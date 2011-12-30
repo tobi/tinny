@@ -59,7 +59,7 @@ func forward(client net.Conn) {
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
-		error(client, string(output))
+		error(client, "Compiling", string(output))
 		return
 	}
 
@@ -69,7 +69,7 @@ func forward(client net.Conn) {
 	err = cmd.Start()
 
 	if err != nil {
-		error(client, err.String())
+		error(client, "Starting child process", err.String())
 		return
 	}
 
@@ -81,7 +81,7 @@ func forward(client net.Conn) {
 		if err == nil {
 
 			if pipeRequestResponse(server, client) != nil {
-				error(client, err.String())
+				error(client, "Forwarding inbound request to child", err.String())
 			}
 
 			return
@@ -90,7 +90,7 @@ func forward(client net.Conn) {
 		time.Sleep(2e8) // 200ms
 	}
 
-  error(client, fmt.Sprintf("Timeout waiting to connect to port %d. Perhaps the executable doesn't support the -p parameter?", client_port))
+  error(client, "Connecting to child process", fmt.Sprintf("Timeout waiting to connect to port %d. Perhaps the executable doesn't support the -p parameter?", client_port))
 }
 
 func main() {
