@@ -31,12 +31,11 @@ You must be working on a http sever. The http server needs to understand the -pX
 = Template: 
 
 If you are starting a go web project, use this as template:
-
+  
   package main
   
   import (
-    "http"
-    "log"
+    "net/http"
     "flag"
     "fmt"
   )
@@ -52,9 +51,9 @@ If you are starting a go web project, use this as template:
     flag.Parse()
     http.HandleFunc("/", HelloServer)
   
-    fmt.Printf("Listening on port %d", port)
+    fmt.Printf("Listening on port %d\n", *port)
     err := http.ListenAndServe(fmt.Sprintf(":%d", *port), nil)
     if err != nil {
-      log.Fatal("ListenAndServe: ", err.String())
+      panic(err)
     }
   }
